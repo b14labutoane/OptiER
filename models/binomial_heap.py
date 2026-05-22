@@ -130,7 +130,29 @@ class BinomialHeap:
     
     def is_empty(self):
         return self.head is None
-    
+
+    def to_list(self):
+        result = []
+        crt = self.head
+        while crt is not None:
+            result.append(self._node_to_dict(crt))
+            crt = crt.sibling
+        return result
+
+    def _node_to_dict(self, node):
+        children = []
+        child = node.child
+        while child is not None:
+            children.append(self._node_to_dict(child))
+            child = child.sibling
+        return {
+            "key": round(node.key, 1),
+            "name": node.patient.name if node.patient else str(node.key),
+            "severity": node.patient.severity if node.patient else None,
+            "degree": node.degree,
+            "children": children
+        }
+
     def print_heap(self):
         crt = self.head
         level = 0

@@ -208,6 +208,23 @@ class RBTree:
             self.delete_fixup(x)
 
 
+    def to_dict(self):
+        if self.root == self.NIL:
+            return None
+        return self._node_to_dict(self.root)
+
+    def _node_to_dict(self, node):
+        if node == self.NIL:
+            return None
+        return {
+            "key": round(node.key, 1),
+            "color": "red" if node.color == RED else "black",
+            "name": node.patient.name if node.patient else str(node.key),
+            "severity": node.patient.severity if node.patient else None,
+            "left": self._node_to_dict(node.left),
+            "right": self._node_to_dict(node.right),
+        }
+
     def inorder(self, node=None, result=None):
         if result is None:
             result = []

@@ -1,0 +1,302 @@
+OPTIER - SISTEM OPTIMIZAT DE DISTRIBUȚIE A PACIENȚILOR ÎN CAMERA DE URGENȚĂ
+
+Proiect la Structuri de Date
+Student: [NUMELE TĂU]
+Grupa: [GRUPA TA]
+Data: Iunie 2025
+
+==============================================================================
+1. TEMATICA PROIECTULUI
+==============================================================================
+
+Proiectul implementează un sistem de management al camerei de urgență care
+distribuie pacienții în mod corect și eficient între mai multe săli de tratament.
+Sistemul folosește două structuri de date avansate - Arbore Roșu-Negru (Red-Black
+Tree) și Heap Binomial (Binomial Heap) - pentru a asigura trierea prioritara a
+pacienților și redistribuirea lor în caz de dezastre cu victime multiple.
+
+Motivația alegerii temei:
+- Camera de urgență din spitalele reale confruntă cu probleme de suprapopulare
+- Triage-ul manual poate fi incorect sau lent
+- Un sistem automat bazat pe structuri de date poate asigura distribuire corectă
+- Structurile alese sunt relevante pentru problema de prioritizare și fuziune
+
+==============================================================================
+2. DESCRIEREA STRUCTURILOR DE DATE - ARHITECTURA PROIECTULUI
+==============================================================================
+
+2.1 Arbore Roșu-Negru (Red-Black Tree)
+---------------------------------------
+
+Arborele Roșu-Negru este un arbore binar de căutare auto-echilibrat care
+respectă 5 invariante:
+1. Fiecare nod este fie ROȘU, fie NEGRU
+2. Rădăcina este întotdeauna NEAGRĂ
+3. Toate frunzele NIL sunt NEGRE
+4. Dacă un nod este ROȘU, ambii copii sunt NEGRI (nu există două roșuri consecutive)
+5. Orice cale de la un nod la frunzele NIL conține același număr de noduri NEGRE
+
+Aceste reguli garantează că înălțimea arborelui este O(log n), deci toate
+operațiile sunt O(log n) în cel mai rău caz.
+
+În proiect, RBT este folosit pentru:
+- Indexarea tuturor pacienților după prioritatea compozită
+- Căutare rapidă O(log n) a unui pacient după prioritate
+- Suport pentru interogări pe interval (range queries)
+- Menținerea ordinii sortate pentru afișare
+
+Operații implementate:
+- insert(key, patient): O(log n) - inserare cu fixup (3 cazuri + oglinzi)
+- delete(key): O(log n) - ștergere cu fixup (4 cazuri + oglinzi)
+- search(key): O(log n) - căutare BST standard
+- left_rotate(x), right_rotate(x): O(1) - rotații pentru reechilibrare
+- insert_fixup(z): O(log n) - reparare invariante după inserare
+- delete_fixup(x): O(log n) - reparare invariante după ștergere
+- transplant(u, v): O(1) - înlocuire subarbore
+- minimum(node): O(log n) - găsire minim
+- to_dict(): serializare pentru vizualizare SVG
+
+2.2 Heap Binomial (Binomial Heap)
+-----------------------------------
+
+Heap-ul Binomial este o structură de date care constă dintr-o colecție de
+arbori binomiali. Un arbore binomial de ordin k are exact 2^k noduri.
+
+Proprietăți:
+- Fiecare arbore binomial respectă proprietatea de min-heap (părinte < copii)
+- Arborii din lista de rădăcini sunt ordonați crescător după grad
+- Doi arbori de același grad pot fi uniți (link) într-un arbore de grad+1
+
+În proiect, Heap-ul Binomial este folosit pentru:
+- Câte un heap pentru fiecare sală de tratament (3 săli)
+- Extragerea pacientului cel mai urgent din fiecare sală
+- Fuziunea heap-urilor în caz de "mass casualty" (dezastro cu victime multiple)
+- Operația de merge este O(log n), față de O(n) la heap-ul binar clasic
+
+Operații implementate:
+- insert(key, patient): O(log n) garantat, O(1) amortizat
+- merge(other): O(log n) - fuziunea a două heap-uri
+- extract_min(): O(log n) - extrage minimul și reconstruiește heap-ul
+- find_min(): O(log n) - găsește minimul din lista de rădăcini
+- binomial_link(y, z): O(1) - leagă doi arbori de același grad
+- to_list(): serializare pentru vizualizare SVG
+
+2.3 Clasa Patient
+------------------
+
+Fiecare pacient are:
+- name: numele pacientului
+- cnp: cod numeric personal (identificator unic)
+- severity: severitatea pe scară 1-5 (1=critic, 5=minor)
+- arrival_time: momentul sosirii la urgență
+- assigned_room: sala atribuită
+
+Prioritatea compozită se calculează:
+  priority = severity * 10 - (minute_asteptare / 30)
+
+Aceasta asigură:
+- Pacienții critici (severitate 1) au prioritate mai mare decât cei minori
+- Timpul de așteptare crește gradual prioritatea (previne înfometarea)
+- Un pacient cu severitate 5 care așteaptă 2 ore: prioritate = 50 - 4 = 46
+- Un pacient cu severitate 3 care tocmai a sosit: prioritate = 30
+- Deci pacientul care așteaptă mult va fi tratat înainte
+
+2.4 Clasa EmergencyRoom
+-------------------------
+
+Leagă cele două structuri de date:
+- rbt: Arbore Roșu-Negru pentru indexarea tuturor pacienților
+- rooms: dicționar {1: BinomialHeap, 2: BinomialHeap, 3: BinomialHeap}
+- patient_records: dicționar {cnp: Patient} pentru căutare rapidă
+- room_sizes: dicționar {room_id: count} pentru distribuire
+
+Fluxul de funcționare:
+1. Pacientul sosește → se calculează prioritatea compozită
+2. Se găsește sala cu cele mai puține pacienți (room_sizes minim)
+3. Se inserează în heap-ul sălii respective
+4. Se inserează în RBT pentru indexare globală
+5. La admitere: extract_min din heap + delete din RBT
+
+==============================================================================
+3. EXPLICAREA ALGORITMILOR
+==============================================================================
+
+3.1 Inserare în RBT
+--------------------
+
+1. Se inserează nodul ca într-un BST obișnuit
+2. Noul nod este colorat ROȘU
+3. Dacă părintele este ROȘU, se încalcă regula 4 → se apelează insert_fixup
+
+Cazurile de reparare:
+
+Cazul 1: Unchiul este ROȘU
+  → Recolorăm părintele, unchiul și bunicul
+  → Mutăm problema la nivelul bunicului
+
+Cazul 2: Unchiul este NEGRU, nodul este copil drept (triunghi)
+  → Rotim părintele la stânga
+  → Se transformă în Cazul 3
+
+Cazul 3: Unchiul este NEGRU, nodul este copil stâng (linie)
+  → Recolorăm părintele NEGRU și bunicul ROȘU
+  → Rotim bunicul la dreapta
+  → Arborele devine valid
+
+Fiecare caz are o variantă oglindită (părinte copil drept vs stâng).
+
+3.2 Ștergere din RBT
+---------------------
+
+1. Se caută nodul de șters
+2. Se aplică ștergerea BST (3 cazuri: frunză, un copil, doi copii)
+3. Dacă un nod NEGRU a fost eliminat → se apelează delete_fixup
+4. Fixup-ul are 4 cazuri (+ oglinzi) bazate pe fratele nodului problemă
+
+3.3 Merge Heap Binomial
+------------------------
+
+Algoritmul de fuziune este similar cu adunarea binară:
+1. Se îmbină listele de rădăcini ordonate după grad (merge sort)
+2. Se parcurge lista combinată:
+   - Dacă doi arbori au același grad → se leagă (link)
+   - Dacă trei arbori au același grad → se leagă primii doi, se continuă
+3. Rezultatul este un heap valid
+
+3.4 Mass Casualty (Redistribuire)
+----------------------------------
+
+1. Se extrag toți pacienții din toate heap-urile în listă
+2. Se distruge RBT-ul vechi și se creează unul nou
+3. Se redistribuie pacienții round-robin:
+   - Pacientul 0 → Sala 1 (0 % 3 + 1 = 1)
+   - Pacientul 1 → Sala 2 (1 % 3 + 1 = 2)
+   - Pacientul 2 → Sala 3 (2 % 3 + 1 = 3)
+   - Pacientul 3 → Sala 1 (3 % 3 + 1 = 1)
+   - ...
+4. Se recalculează prioritățile și se reinserază în structuri
+
+==============================================================================
+4. ANALIZA COMPLEXITĂȚII
+==============================================================================
+
+4.1 Timp
+---------
+
+| Operație            | RBT          | Heap Binomial | Justificare                      |
+|---------------------|--------------|---------------|----------------------------------|
+| Inserare            | O(log n)     | O(log n)*     | *O(1) amortizat                  |
+| Ștergere/Extract    | O(log n)     | O(log n)      | Height/sibling traversal         |
+| Căutare             | O(log n)     | O(n)          | BST vs list traversal            |
+| Găsire minim        | O(log n)**   | O(log n)      | **leftmost node / root list      |
+| Merge               | N/A          | O(log n)      | Avantaj principal vs heap binar  |
+| Rotație/Link        | O(1)         | O(1)          | Operație elementară              |
+
+Comparație cu alte structuri:
+- Heap Binar: merge = O(n), RBT nu suportă merge
+- Heap Binomial: merge = O(log n) — de aceea l-am ales
+- AVL: mai multe rotații la inserare decât RBT
+
+4.2 Spațiu
+----------
+
+Ambele structuri folosesc O(n) spațiu:
+- RBT: 5 pointeri per nod (key, patient, color, left, right, parent)
+- Heap Binomial: 5 pointeri per nod (key, patient, degree, parent, child, sibling)
+
+==============================================================================
+5. EXEMPLE DE RULARE
+==============================================================================
+
+5.1 Adăugare pacienți
+---------------------
+
+Input: Adăugăm 6 pacienți cu severități diferite
+
+Rezultat:
+  Rooms: {1: 2, 2: 2, 3: 2}  (distribuție egală)
+  Waiting: 6, Treated: 0
+
+  Pacienții sunt distribuiți automat în sala cu cele mai puține persoane.
+
+5.2 Admitere pacient
+--------------------
+
+Input: Admit from Room 1
+
+Rezultat:
+  Admitted: Ion (sev:2, room:1)
+  Rooms: {1: 1, 2: 2, 3: 2}
+  Waiting: 5, Treated: 1
+
+  Heap-ul extrage pacientul cu prioritatea minimă (cel mai urgent).
+
+5.3 Mass Casualty
+-----------------
+
+Input: Mass Casualty Mode (după admiterea unor pacienți)
+
+Rezultat:
+  Redistributed: 5 pacienți
+  Rooms: {1: 2, 2: 2, 3: 1}
+  
+  Toți pacienții sunt redistribuiți round-robin pentru echilibru.
+
+5.4 Căutare pacient
+-------------------
+
+Input: Search CNP "101"
+
+Rezultat:
+  Name: Ion
+  Severity: 2 - Urgent
+  Room: 1
+  Priority: 20.0
+  Arrived: 14:30:25
+
+==============================================================================
+6. DIFICULTĂȚI ÎNTÂMPINATE
+==============================================================================
+
+1. Implementarea delete_fixup pentru RBT
+   - 4 cazuri cu variante oglindite (8 subcazuri total)
+   - Dificil de depanat fără vizualizare
+   - Soluție: testare extensivă cu secvențe de inserare/ștergere
+
+2. Algoritmul de merge pentru Heap Binomial
+   - Manipularea pointerilor sibling/parent/child este complexă
+   - Trebuie menținută ordinea după grad în lista de rădăcini
+   - Cazurile cu 3 arbori de același grad necesită atenție
+
+3. Vizualizarea arborilor în browser
+   - Poziționarea nodurilor fără suprapunere
+   - Soluție: poziționare in-order pentru RBT, similar pentru Heap
+   - Redimensionarea automată a SVG-ului
+
+4. Integrarea Flask cu structurile de date
+   - Serializarea structurilor în JSON (to_dict, to_list)
+   - Sincronizarea dintre RBT și Heap-uri la admitere și mass casualty
+
+==============================================================================
+7. TEHNOLOGII FOLOSITE
+==============================================================================
+
+- Limbaj: Python 3.12
+- Framework web: Flask
+- Frontend: HTML5, CSS3, JavaScript (SVG pentru vizualizare)
+- Structuri de date: implementate de la zero (fără biblioteci standard)
+- Control versiune: Git + GitHub
+
+Bibliografie:
+1. Cormen, Leiserson, Rivest, Stein - "Introduction to Algorithms" (CLRS),
+   Capitolul 13 (Red-Black Trees) și Capitolul 19 (Binomial Heaps)
+2. GeeksforGeeks - "Red-Black Tree Set 1, 2, 3"
+   https://geeksforgeeks.org/red-black-tree-set-1-introduction-2/
+3. GeeksforGeeks - "Binomial Heap"
+   https://geeksforgeeks.org/binomial-heap-2/
+4. Programiz - "Red-Black Tree" și "Binomial Heap"
+   https://programiz.com/dsa/red-black-tree
+5. MDN Web Docs - "SVG Tutorial"
+   https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial
+6. Flask Documentation
+   https://flask.palletsprojects.com/
