@@ -4,14 +4,6 @@ from models.binomial_heap import BinomialHeap
 from models.patient import Patient
 
 class EmergencyRoom:
-    """
-    Clasa principala pentru managementul camerei de urgenta
-    Arhitectura:
-    - RBT: Indexare globala a tuturor pacientilor dupa prioritate compusa
-    - rooms: Heap Binomial per sala de tratament (cozi de prioritate)
-    - patient_records: Dictionar pentru cautare rapida dupa CNP
-    - room_sizes: Numar curent de pacienti pe fiecare sala
-    """
     def __init__(self, num_rooms=3):
         # Initializeaza sistemul cu un numar specificat de sali de tratament
         self.num_rooms = num_rooms
