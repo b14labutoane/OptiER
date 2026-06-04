@@ -1,9 +1,19 @@
+# Clasa pentru gestionarea unei camere de urgenta 
 from models.redblack_tree import RBTree
 from models.binomial_heap import BinomialHeap
 from models.patient import Patient
 
 class EmergencyRoom:
+    """
+    Clasa principala pentru managementul camerei de urgenta
+    Arhitectura:
+    - RBT: Indexare globala a tuturor pacientilor dupa prioritate compusa
+    - rooms: Heap Binomial per sala de tratament (cozi de prioritate)
+    - patient_records: Dictionar pentru cautare rapida dupa CNP
+    - room_sizes: Numar curent de pacienti pe fiecare sala
+    """
     def __init__(self, num_rooms=3):
+        # Initializeaza sistemul cu un numar specificat de sali de tratament
         self.num_rooms = num_rooms
         self.rooms = {i: BinomialHeap() for i in range(1, num_rooms+1)}
         self.room_sizes = {i:0 for i in range(1, num_rooms+1)}
@@ -12,10 +22,11 @@ class EmergencyRoom:
         self.total_treated = 0
 
     def add_patient(self, name, cnp, severity):
+        # Adauga un pacient nou in sistemul de urgenta
         patient = Patient(name, cnp, severity)
         priority = patient.composite_priority()
 
-        best_room = min(self.room_sizes, key=self.room_sizes.get)
+        best_room = min(self.room_sizes, key=lambda k: self.room_sizes[k])
         patient.assigned_room = best_room
 
         self.rooms[best_room].insert(priority,patient)
@@ -24,6 +35,7 @@ class EmergencyRoom:
         self.room_sizes[best_room] += 1
 
     def admit_next(self, room_id):
+        # Trateaza urmatorul pacient de pe o sala specificata
         node = self.rooms[room_id].extract_min()
         if node is None:
             return None
@@ -36,6 +48,7 @@ class EmergencyRoom:
         return patient
     
     def mass_casualty(self):
+        # Redistribuie toti pacientii 
         all_patients = []
         for room_id in self.rooms:
             while not self.rooms[room_id].is_empty():
@@ -55,6 +68,7 @@ class EmergencyRoom:
         return len(all_patients)
     
     def get_status(self):
+        # Returneaza statusul curent al sistemului de urgenta
         return {
             "room_sizes": dict(self.room_sizes),
             "total_treated": self.total_treated,

@@ -1,7 +1,18 @@
+# Red-Black Tree implementare pentru OptiER - sistem indexare pacienti
+# Arbore echilibrat O(log n) pentru prioritizare pacienti urgenta
+# Folosim arborele de cautare pentru a pastra pacientii sortati dupa prioritate
+# Operatii: insert O(log n), delete O(log n), search O(log n)
+# 5 reguli de echilibrare: radacina neagra, rosu nu are copii rosii, egal numar negri pe cai
+# Avantaj: garanti performanta O(log n) chiar si in cel mai rau caz
+# Aplicatie: lista asteptare urgenta cu pacienti prioritizati dupa severitate + timp asteptare
+
 RED = 0
 BLACK = 1
 
 class RBNode:
+    # nodul individual din arborele rosu-negru
+    # fiecare nod retine cheia (prioritate pacient) si datele pacientului
+    # nodurile au culoare rosu sau negru pentru mentinerea echilibrului
     def __init__(self, key, patient=None):
         self.key = key
         self.patient = patient 
@@ -12,12 +23,17 @@ class RBNode:
 
     
 class RBTree:
+    # arborele principal rosu-negru care gestioneaza toti pacientii
+    # mentine echilibrul pentru garantii performanta O(log n) pe toate operatiile
+    # foloseste NIL ca nod sentinel pentru simplificarea codului
     def __init__(self):
         self.NIL = RBNode(0)
         self.NIL.color = BLACK
         self.root = self.NIL
 
     def left_rotate(self, x):
+        # rotire la stanga in jurul nodului x
+        # y devine radacina subarborelui, x devine copil stang al lui y
         y = x.right
         x.right = y.left
         if y.left != self. NIL:
@@ -33,6 +49,8 @@ class RBTree:
         x.parent = y
 
     def right_rotate(self, x):
+        # rotire la dreapta in jurul nodului x  
+        # y devine radacina subarborelui, x devine copil drept al lui y
         y = x.left
         x.left = y.right
         if y.right != self. NIL:
@@ -48,6 +66,12 @@ class RBTree:
         x.parent = y
 
     def insert_fixup(self, z):
+        # corecteaza violarile regulilor rosu-neg dupa insertie
+        # gestioneaza 3 cazuri principale + simetriile lor
+        
+        # caz 1: unchi rosu - recolorare si mutare sus
+        # caz 2: unchi negru + triunghi - rotire pentru a crea linie  
+        # caz 3: unchi negru + linie - rotire dubla si recolorare
         while z.parent and z.parent.color == RED:
             if z.parent == z.parent.parent.left:
                 y = z.parent.parent.right
@@ -82,6 +106,9 @@ class RBTree:
         self.root.color = BLACK
 
     def insert(self, key, patient):
+        # insereaza un nod nou in arbore si corecteaza echilibrul
+        # parcurge arborele pentru a gasci pozitia corecta
+        # porneste cu nodul rosu si apel fixup pentru mentinerea regulilor
         z = RBNode(key, patient)
         z.left = self.NIL
         z.right = self.NIL
@@ -108,6 +135,9 @@ class RBTree:
         self.insert_fixup(z)
 
     def search(self, key):
+        # cauta un nod cu cheia specificata in arbore
+        # parcurge arborele comparand cheile pana gaseste potrivire
+        # returneaza nodul gasit sau NIL daca nu exista
         x = self.root
         while x != self.NIL and key != x.key:
             if key < x.key:
@@ -117,11 +147,16 @@ class RBTree:
         return x
     
     def minimum(self, node):
+        # gaseste nodul cu cea mai mica cheie din subarbore
+        # parcurge mereu spre copilul stang pana ajunge la frunza
         while node.left != self.NIL:
             node = node.left
         return node
     
     def transplant(self, u, v):
+        # inlocuieste subarborele cu radacina u cu subarborele cu radacina v
+        # mentine legaturile parentale corecte
+        # folosita in delete pentru a rearanja arborele
         if u.parent is None:
             self.root = v
         elif u == u.parent.left:
@@ -131,6 +166,12 @@ class RBTree:
         v.parent = u.parent
 
     def delete_fixup(self, x):
+        # corecteaza violarile dupa stergere nod negru
+        # gestioneaza 4 cazuri principale pentru mentinerea echilibrului
+        # caz 1: frate rosu - rotire pentru a transforma in caz cu frate negru
+        # caz 2: frate negru + 2 copii negri - muta negrimea spre sus
+        # caz 3: frate negru + copil rosu apropiat - rotire pentru a crea caz final
+        # caz 4: frate negru + copil rosu indepartat - rotire dubla si recolorare
         while x != self.root and x.color == BLACK:
             if x == x.parent.left:
                 w = x.parent.right
@@ -177,6 +218,9 @@ class RBTree:
             x.color = BLACK
 
     def delete(self, key):
+        # sterge un nod din arbore si mentine echilibrul
+        # gestioneaza 3 cazuri: nod cu 0, 1 sau 2 copii
+        # daca nodul era negru, trebuie sa corectam echilibrul
         z = self.search(key)
         if z == self.NIL:
             return
@@ -209,11 +253,15 @@ class RBTree:
 
 
     def to_dict(self):
+        # converteste arborele in dictionar serializabil
+        # folosit pentru export date si vizualizare grafica
         if self.root == self.NIL:
             return None
         return self._node_to_dict(self.root)
 
     def _node_to_dict(self, node):
+        # functie recursiva pentru conversie nod in dictionar
+        # trateaza cazul NIL pentru a opesi recursia
         if node == self.NIL:
             return None
         return {
@@ -226,6 +274,9 @@ class RBTree:
         }
 
     def inorder(self, node=None, result=None):
+        # parcurgere inordine a arborelui (stanga-radacina-dreapta)
+        # returneaza lista nodurilor in ordine sortata
+        # folosita pentru vizualizare si debug
         if result is None:
             result = []
             node = self.root
@@ -237,6 +288,9 @@ class RBTree:
         return result
     
     def print_tree(self, node=None, level=0, prefix="Root: "):
+        # afiseaza arborele ierarhic in consola
+        # foloseste indentare pentru a arata structura
+        # R = rosu, B = negru la sfarsitul cheii
         if node is None:
             node = self.root
         if node != self.NIL:

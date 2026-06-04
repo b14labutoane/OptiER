@@ -1,3 +1,4 @@
+# Flask server pentru OptiER 
 from flask import Flask, render_template, request, jsonify
 from models.emergency_room import EmergencyRoom
 
@@ -8,12 +9,14 @@ er = EmergencyRoom()
 def index():
     return render_template('index.html')
 
+# Adauga un pacient nou 
 @app.route('/api/patient', methods=['POST'])
 def add_patient():
     data = request.json
     er.add_patient(data['name'], data['cnp'], int(data['severity']))
     return jsonify({"status" : "ok"})
 
+# Admite urmatorul pacient intr-o sala specificata -
 @app.route('/api/admit/<int:room_id>', methods=['POST'])
 def admit_next(room_id):
     patient = er.admit_next(room_id)
@@ -21,23 +24,28 @@ def admit_next(room_id):
         return jsonify({"error" : "Room is empty"}), 400
     return jsonify({"patient" : str(patient)})
 
+# Redistribuire dupa catastrofa 
 @app.route('/api/mass-casualty', methods=['POST'])
 def mass_casualty():
     count = er.mass_casualty()
     return jsonify({"redistributed" : count})
 
+# Afiseaza statusul curent al sistemului
 @app.route('/api/status')
 def get_status():
     return jsonify(er.get_status())
 
+# Afiseaza arborele rosu-negru cu pacienti
 @app.route('/api/rbt')
 def get_rbt():
     return jsonify(er.rbt.to_dict())
 
+# Afiseaza heap-ul unei sali specifice 
 @app.route('/api/heap/<int:room_id>')
 def get_heap(room_id):
     return jsonify(er.rooms[room_id].to_list())
 
+# Cauta pacient dupa CNP 
 @app.route('/api/search/<cnp>')
 def search_patient(cnp):
     patient = er.patient_records.get(cnp)

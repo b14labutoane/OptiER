@@ -13,6 +13,16 @@
             <span class="logo">+</span> OptiER
         </div>
 
+        <div class="stats-section">
+            <div class="stats-grid">
+                <div class="stat-card"><span id="stat-waiting" class="stat-num">0</span><span class="stat-label">Waiting</span></div>
+                <div class="stat-card"><span id="stat-treated" class="stat-num">0</span><span class="stat-label">Treated</span></div>
+                <div class="stat-card"><span id="stat-r1" class="stat-num stat-blue">0</span><span class="stat-label">Room 1</span></div>
+                <div class="stat-card"><span id="stat-r2" class="stat-num stat-green">0</span><span class="stat-label">Room 2</span></div>
+                <div class="stat-card"><span id="stat-r3" class="stat-num stat-orange">0</span><span class="stat-label">Room 3</span></div>
+            </div>
+        </div>
+
         <div class="sidebar-scroll">
             <div class="section">
                 <div class="section-label" onclick="toggleSection(this)">New Patient <span class="chevron">▾</span></div>
@@ -36,11 +46,8 @@
                     <button class="btn btn-secondary" onclick="admitNext(1)">Room 1</button>
                     <button class="btn btn-secondary" onclick="admitNext(2)">Room 2</button>
                     <button class="btn btn-secondary" onclick="admitNext(3)">Room 3</button>
+                    <button class="btn btn-danger" onclick="massCasualty()">Mass Casualty</button>
                 </div>
-            </div>
-
-            <div class="section">
-                <button class="btn btn-danger" onclick="massCasualty()">⚠ Mass Casualty</button>
             </div>
 
             <div class="section">
@@ -52,52 +59,16 @@
                 </div>
             </div>
         </div>
-
-        <div class="stats-section">
-            <div class="section-label">Overview</div>
-            <div class="stats-grid">
-                <div class="stat-card"><span id="stat-waiting" class="stat-num">0</span><span class="stat-label">Waiting</span></div>
-                <div class="stat-card"><span id="stat-treated" class="stat-num">0</span><span class="stat-label">Treated</span></div>
-                <div class="stat-card"><span id="stat-r1" class="stat-num stat-blue">0</span><span class="stat-label">Room 1</span></div>
-                <div class="stat-card"><span id="stat-r2" class="stat-num stat-green">0</span><span class="stat-label">Room 2</span></div>
-                <div class="stat-card"><span id="stat-r3" class="stat-num stat-orange">0</span><span class="stat-label">Room 3</span></div>
-            </div>
-        </div>
     </div>
 
     <div class="main">
         <div class="topbar">
-            <div class="tab active" data-tab="trees" onclick="switchTab('trees')">Data Structures</div>
-            <div class="tab" data-tab="queue" onclick="switchTab('queue')">Patient Queue</div>
+            <div class="tab active" data-tab="queue" onclick="switchTab('queue')">Patient Queue</div>
             <div class="tab" data-tab="log" onclick="switchTab('log')">Activity</div>
         </div>
 
         <div class="content">
-            <div id="tab-trees" class="tab-content active">
-                <div class="viz-panel">
-                    <div class="viz-header">
-                        <span class="viz-title">Red-Black Tree</span>
-                        <span class="viz-subtitle">Patient Index (by priority)</span>
-                    </div>
-                    <div class="viz-canvas" id="rbt-container">
-                        <svg id="rbt-svg" width="100%" height="400"></svg>
-                        <div class="viz-empty" id="rbt-empty">Add a patient to see the tree grow</div>
-                    </div>
-                </div>
-
-                <div class="viz-panel">
-                    <div class="viz-header">
-                        <span class="viz-title">Binomial Heaps</span>
-                        <span class="viz-subtitle">Room Priority Queues</span>
-                    </div>
-                    <div class="viz-canvas" id="heap-container">
-                        <svg id="heap-svg" width="100%" height="400"></svg>
-                        <div class="viz-empty" id="heap-empty">Add a patient to see the heaps</div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="tab-queue" class="tab-content">
+            <div id="tab-queue" class="tab-content active">
                 <table class="patient-table">
                     <thead>
                         <tr>

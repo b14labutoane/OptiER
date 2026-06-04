@@ -1,4 +1,6 @@
+# Binomial Heap
 class BinomialNode:
+    # Nodul unui heap binomial
     def __init__(self, key, patient=None):
         self.key = key
         self.patient = patient
@@ -7,6 +9,7 @@ class BinomialNode:
         self.child = None
         self.sibling = None
 
+# Leaga doi arbori de acelasi grad
 def binomial_link(y, z):
     y.parent = z
     y.sibling = z.child
@@ -14,16 +17,20 @@ def binomial_link(y, z):
     z.degree += 1
 
 class BinomialHeap:
+    # Coada de prioritate folosita pentru fiecare sala in camera de urgenta
     def __init__(self):
         self.head = None
     
+    # Adauga un element in heapul binomial cu O(log n) complexitate
     def insert(self, key, patient=None):
         new_node = BinomialNode(key, patient)
         temp = BinomialHeap()
         temp.head = new_node
         self.merge(temp)
 
+    # Uneste doua heapuri binomiale in O(log n) 
     def merge(self, other):
+        # Imbinarea listelor de radacini
         if self.head is None:
             self.head = other.head
             return
@@ -34,7 +41,8 @@ class BinomialHeap:
         prev = None
         a = self.head
         b = other.head
-
+        
+        # Combinare listele de radacini sortate dupa grad
         while a is not None and b is not None:
             if a.degree <= b.degree:
                 if prev is None:
@@ -58,7 +66,8 @@ class BinomialHeap:
         
         if new_head is None:
             return
-    
+        
+        # Eliminare minim din lista de radacini
         self.head = new_head
 
         prev = None
@@ -83,6 +92,7 @@ class BinomialHeap:
                     crt = next_node
                 next_node = crt.sibling
 
+    # Gaseste elementul cu prioritatea minima in O(log n) 
     def find_min(self):
         if self.head is None:
             return None
@@ -94,9 +104,12 @@ class BinomialHeap:
             crt = crt.sibling
         return min_node
     
+    # Extrage elementul cu prioritatea minima in O(log n) timp
     def extract_min(self):
         if self.head is None:
             return None
+            
+        # Gasire elementului cu prioritate minima
         min_node = self.head
         prev_min = None
         prev = None
@@ -116,21 +129,25 @@ class BinomialHeap:
 
         child = min_node.child
         prev_child = None
+        # Inversare lista copii pentru a crea un heap valid
         while child is not None:
             next_child = child.sibling 
             child.sibling = prev_child
             child.parent = None
             prev_child = child 
             child = next_child
+        
+        # Merge heap-ul copiilor minimului cu heap-ul principal
         child_heap = BinomialHeap()
         child_heap.head = prev_child
         self.merge(child_heap)
-
         return min_node
     
+    # Verifica daca heapul este gol in timp constant
     def is_empty(self):
         return self.head is None
 
+    # Converteste heapul in lista de dictionare pentru afisare
     def to_list(self):
         result = []
         crt = self.head
@@ -139,6 +156,7 @@ class BinomialHeap:
             crt = crt.sibling
         return result
 
+    # Converteste un nod in dictionar pentru afisare iterativa
     def _node_to_dict(self, node):
         children = []
         child = node.child
@@ -153,6 +171,7 @@ class BinomialHeap:
             "children": children
         }
 
+    # Afiseaza structura completa a heapului in format text
     def print_heap(self):
         crt = self.head
         level = 0
@@ -161,6 +180,7 @@ class BinomialHeap:
             self._print_tree(crt, 1)
             crt = crt.sibling
 
+    # Afiseaza recursiv arborii cu indentare pentru vizualizare ierarhica
     def _print_tree(self, node, indent):
         if node is None:
             return 
