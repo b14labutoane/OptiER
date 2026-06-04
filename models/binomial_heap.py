@@ -180,7 +180,7 @@ class BinomialHeap:
             self._print_tree(crt, 1)
             crt = crt.sibling
 
-    # Afiseaza recursiv arborii cu indentare pentru vizualizare ierarhica
+    # Afiseaza recursiv arborii cu indentare
     def _print_tree(self, node, indent):
         if node is None:
             return 
