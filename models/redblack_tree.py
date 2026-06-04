@@ -1,11 +1,4 @@
-# Red-Black Tree implementare pentru OptiER - sistem indexare pacienti
-# Arbore echilibrat O(log n) pentru prioritizare pacienti urgenta
-# Folosim arborele de cautare pentru a pastra pacientii sortati dupa prioritate
-# Operatii: insert O(log n), delete O(log n), search O(log n)
-# 5 reguli de echilibrare: radacina neagra, rosu nu are copii rosii, egal numar negri pe cai
-# Avantaj: garanti performanta O(log n) chiar si in cel mai rau caz
-# Aplicatie: lista asteptare urgenta cu pacienti prioritizati dupa severitate + timp asteptare
-
+# Red-Black Tree 
 RED = 0
 BLACK = 1
 
